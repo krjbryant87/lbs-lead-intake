@@ -25,6 +25,54 @@ const CONSULTANT_CALENDARS = {
   'Amber Roehrs': 'amber@littleblindspot.com'
 };
 
+const ZONE_CENTERS = {
+  'northwest': { lat: 45.07, lng: -93.46, label: 'Northwest (Maple Grove area)' },
+  'west lake': { lat: 44.97, lng: -93.51, label: 'West Lake (Wayzata area)' },
+  'southwest': { lat: 44.85, lng: -93.46, label: 'Southwest (Eden Prairie area)' },
+  'south': { lat: 44.76, lng: -93.28, label: 'South (Burnsville area)' },
+  'central': { lat: 44.98, lng: -93.27, label: 'Central (Minneapolis/Edina area)' }
+};
+
+const ZONE_RADIUS_MILES = 12;
+
+function milesBetween(lat1, lng1, lat2, lng2) {
+  const R = 3958.8;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getZoneFromCoords(lat, lng) {
+  let closest = null;
+  let closestDist = Infinity;
+  for (const [zone, center] of Object.entries(ZONE_CENTERS)) {
+    const dist = milesBetween(lat, lng, center.lat, center.lng);
+    if (dist < ZONE_RADIUS_MILES && dist < closestDist) {
+      closest = zone;
+      closestDist = dist;
+    }
+  }
+  return closest;
+}
+
+async function geocodeAddress(address) {
+  try {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.results && data.results.length > 0) {
+      const { lat, lng } = data.results[0].geometry.location;
+      return { lat, lng };
+    }
+  } catch (e) {
+    console.error('Geocode error:', e.message);
+  }
+  return null;
+}
+
 function getOAuthClient() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -40,7 +88,6 @@ function getAuthedClient(req) {
   return client;
 }
 
-// Auth routes
 app.get('/auth', (req, res) => {
   const client = getOAuthClient();
   const url = client.generateAuthUrl({
@@ -66,7 +113,6 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
-// Home value lookup
 app.get('/api/homeval', async (req, res) => {
   const { address } = req.query;
   if (!address) return res.json({ value: null });
@@ -76,9 +122,10 @@ app.get('/api/homeval', async (req, res) => {
       headers: { 'X-Api-Key': process.env.RENTCAST_API_KEY }
     });
     const data = await response.json();
+    console.log('Rentcast response:', JSON.stringify(data).slice(0, 500));
     if (data && data.length > 0) {
       const prop = data[0];
-      const value = prop.estimatedValue || prop.lastSalePrice || null;
+      const value = prop.estimatedValue || prop.lastSalePrice || prop.price || null;
       return res.json({ value });
     }
     res.json({ value: null });
@@ -88,12 +135,32 @@ app.get('/api/homeval', async (req, res) => {
   }
 });
 
-// Get available slots
+app.get('/api/geocode', async (req, res) => {
+  const { address } = req.query;
+  if (!address) return res.json({ lat: null, lng: null });
+  const coords = await geocodeAddress(address);
+  res.json(coords || { lat: null, lng: null });
+});
+
+app.get('/api/places', async (req, res) => {
+  const { input } = req.query;
+  if (!input) return res.json({ predictions: [] });
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&components=country:us&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json({ predictions: data.predictions || [] });
+  } catch (e) {
+    console.error('Places error:', e.message);
+    res.json({ predictions: [] });
+  }
+});
+
 app.get('/api/slots', async (req, res) => {
   const auth = getAuthedClient(req);
   if (!auth) return res.status(401).json({ error: 'Not authenticated' });
 
-  const { consultants, date_range = 14 } = req.query;
+  const { consultants, date_range = 14, address } = req.query;
   if (!consultants) return res.json({});
 
   const names = consultants.split(',').map(n => n.trim());
@@ -105,13 +172,21 @@ app.get('/api/slots', async (req, res) => {
   const timeMax = new Date(now);
   timeMax.setDate(timeMax.getDate() + parseInt(date_range));
 
+  // Geocode the new appointment address for zone comparison
+  let newAppointmentZone = null;
+  if (address) {
+    const coords = await geocodeAddress(address);
+    if (coords) newAppointmentZone = getZoneFromCoords(coords.lat, coords.lng);
+  }
+
   const results = {};
 
   for (const name of names) {
     const calId = CONSULTANT_CALENDARS[name];
-    if (!calId) { results[name] = []; continue; }
+    if (!calId) { results[name] = { slots: [], zoneWarnings: {} }; continue; }
 
     try {
+      // Get freebusy
       const freebusyRes = await calendar.freebusy.query({
         requestBody: {
           timeMin: timeMin.toISOString(),
@@ -122,39 +197,76 @@ app.get('/api/slots', async (req, res) => {
       });
 
       const busy = freebusyRes.data.calendars[calId]?.busy || [];
-      const slots = [];
 
-      // Start from next business hour in Chicago time
+      // Get existing events to check locations for zone conflicts
+      const eventsRes = await calendar.events.list({
+        calendarId: calId,
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime'
+      });
+
+      // Build a map of date -> existing appointment zones
+      const dateZoneMap = {};
+      for (const event of (eventsRes.data.items || [])) {
+        if (!event.location) continue;
+        const eventDate = new Date(event.start.dateTime || event.start.date)
+          .toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+        const coords = await geocodeAddress(event.location);
+        if (coords) {
+          const zone = getZoneFromCoords(coords.lat, coords.lng);
+          if (zone) {
+            if (!dateZoneMap[eventDate]) dateZoneMap[eventDate] = [];
+            dateZoneMap[eventDate].push({ zone, location: event.location, title: event.summary });
+          }
+        }
+      }
+
+      const slots = [];
+      const zoneWarnings = {};
+
       const current = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
       current.setMinutes(0, 0, 0);
       current.setHours(current.getHours() + 1);
 
+      const todayChicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+
       while (current < timeMax && slots.length < 6) {
-        // Get current hour in Chicago time
         const chicagoTime = new Date(current.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
         const day = chicagoTime.getDay();
         const hour = chicagoTime.getHours();
 
-      const todayChicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-const isToday = chicagoTime.getDate() === todayChicago.getDate() &&
-                chicagoTime.getMonth() === todayChicago.getMonth() &&
-                chicagoTime.getFullYear() === todayChicago.getFullYear();
+        const isToday = chicagoTime.getDate() === todayChicago.getDate() &&
+          chicagoTime.getMonth() === todayChicago.getMonth() &&
+          chicagoTime.getFullYear() === todayChicago.getFullYear();
 
-if (!isToday && day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
+        if (!isToday && day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
           const slotEnd = new Date(current);
           slotEnd.setHours(slotEnd.getHours() + 2);
 
-        const conflict = busy.some(b => {
-  const bStart = new Date(b.start);
-  const bEnd = new Date(b.end);
-  // Add 1 hour buffer before and after each busy block
-  bStart.setHours(bStart.getHours() - 1);
-  bEnd.setHours(bEnd.getHours() + 1);
-  return current < bEnd && slotEnd > bStart;
-});
+          const conflict = busy.some(b => {
+            const bStart = new Date(b.start);
+            const bEnd = new Date(b.end);
+            bStart.setHours(bStart.getHours() - 1);
+            bEnd.setHours(bEnd.getHours() + 1);
+            return current < bEnd && slotEnd > bStart;
+          });
 
           if (!conflict) {
             slots.push(current.toISOString());
+
+            // Check zone conflict for this slot's date
+            if (newAppointmentZone) {
+              const slotDate = chicagoTime.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+              const existingZones = dateZoneMap[slotDate];
+              if (existingZones && existingZones.length > 0) {
+                const conflictingZone = existingZones.find(z => z.zone !== newAppointmentZone);
+                if (conflictingZone) {
+                  zoneWarnings[current.toISOString()] = `${name} has an existing appointment in ${ZONE_CENTERS[conflictingZone.zone].label} — this appointment is in a different area`;
+                }
+              }
+            }
           }
         }
 
@@ -168,17 +280,16 @@ if (!isToday && day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
         }
       }
 
-      results[name] = slots;
+      results[name] = { slots, zoneWarnings };
     } catch (e) {
       console.error(`Slots error for ${name}:`, e.message);
-      results[name] = [];
+      results[name] = { slots: [], zoneWarnings: {} };
     }
   }
 
   res.json(results);
 });
 
-// Book appointment
 app.post('/api/book', async (req, res) => {
   const auth = getAuthedClient(req);
   if (!auth) return res.status(401).json({ error: 'Not authenticated' });
@@ -240,7 +351,6 @@ app.post('/api/book', async (req, res) => {
   ].join('\n');
 
   try {
-    // Create consultant calendar event
     await calendar.events.insert({
       calendarId: calId,
       requestBody: {
@@ -252,7 +362,6 @@ app.post('/api/book', async (req, res) => {
       }
     });
 
-    // Create customer calendar event (if email provided)
     if (email) {
       await calendar.events.insert({
         calendarId: 'primary',
