@@ -135,7 +135,12 @@ app.get('/api/slots', async (req, res) => {
         const day = chicagoTime.getDay();
         const hour = chicagoTime.getHours();
 
-        if (day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
+      const todayChicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+const isToday = chicagoTime.getDate() === todayChicago.getDate() &&
+                chicagoTime.getMonth() === todayChicago.getMonth() &&
+                chicagoTime.getFullYear() === todayChicago.getFullYear();
+
+if (!isToday && day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
           const slotEnd = new Date(current);
           slotEnd.setHours(slotEnd.getHours() + 2);
 
