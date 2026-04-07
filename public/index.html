@@ -405,22 +405,32 @@ let selectedValues={};
 async function checkAuth(){
   try{
     const res=await fetch('/api/auth-check');
+    console.log('Auth check status:', res.status);
+    const data=await res.json();
+    console.log('Auth check data:', data);
     if(res.status===401)return false;
     return true;
-  }catch(e){return false;}
+  }catch(e){
+    console.log('Auth check error:', e);
+    return false;
+  }
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
-    initAddressAutocomplete();
+  initAddressAutocomplete();
   const params=new URLSearchParams(window.location.search);
+  console.log('URL params:', params.toString());
+  console.log('authed param:', params.get('authed'));
   if(params.get('authed')==='1'){
     history.replaceState({},'','/');
     showStep(0);updateProgress(0);
   } else {
     const ok=await checkAuth();
+    console.log('checkAuth result:', ok);
     if(ok){showStep(0);updateProgress(0);}
     else{showStep('auth');}
   }
+});
 });
 
 function updateProgress(p){document.getElementById('progressFill').style.width=p+'%';}
