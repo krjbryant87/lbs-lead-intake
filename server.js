@@ -132,7 +132,13 @@ app.get('/auth/callback', async (req, res) => {
     res.redirect('/?error=auth');
   }
 });
-
+app.get('/api/auth-check', (req, res) => {
+  if (req.session.tokens) {
+    res.json({ authenticated: true });
+  } else {
+    res.status(401).json({ authenticated: false });
+  }
+});
 app.get('/api/homeval', async (req, res) => {
   const { address } = req.query;
   if (!address) return res.json({ value: null });
