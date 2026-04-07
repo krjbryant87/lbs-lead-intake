@@ -1,2 +1,5 @@
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm install --cache /tmp/fresh-npm-cache"]
+
+[phases.build]
+cmds = ["npm install --cache /tmp/fresh-npm-cache"]
