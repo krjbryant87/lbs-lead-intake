@@ -329,7 +329,8 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
     </div>
 
   </div>
-</div><script>
+</div>
+<script>
 const CONSULTANTS = {
   Alicia:{tags:['Drapery','Motorization'],specialty:['drapery','motorization'],tiers:['A','B','C','D'],neighborhoods:['minnetonka','wayzata','lake minnetonka','edina','orono','shorewood','deephaven'],priority:1},
   Lisa:{tags:['Motorization','Whole-home'],specialty:['motorization'],tiers:['A','B','C','D'],neighborhoods:['minnetonka','wayzata','lake minnetonka','edina','plymouth','orono','shorewood','deephaven'],priority:2},
@@ -725,4 +726,83 @@ function showConfirmation(){
 
   document.getElementById('panel-customer').innerHTML=`
     <div class="invite-row"><span class="invite-key">Event title</span><span class="invite-val">Little Blind Spot Design Consultation</span></div>
-    <div class="invite-row"><span class="invite-key">Date & time</span><span class="invite-val">${forma
+    <div class="invite-row"><span class="invite-key">Date & time</span><span class="invite-val">${formatSlot(state.selectedSlot)}, 2 hours</span></div>
+    <div class="invite-row"><span class="invite-key">Location</span><span class="invite-val">${state.address}</span></div>
+    <div class="invite-row"><span class="invite-key">Your consultant</span><span class="invite-val">${state.selectedConsultant}</span></div>
+    <div class="invite-row"><span class="invite-key">Questions?</span><span class="invite-val">(612) 555-0100</span></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0;">
+      <div style="font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">What to expect</div>
+      ${expectHtml}
+    </div>
+  `;
+
+  showStep('confirm');updateProgress(100);
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.invite-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.invite-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.invite-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+function initAddressAutocomplete(){
+  const input=document.getElementById('addressInput');
+  const suggestions=document.getElementById('addressSuggestions');
+  let debounceTimer;
+
+  input.addEventListener('input',()=>{
+    clearTimeout(debounceTimer);
+    const val=input.value.trim();
+    if(val.length<3){suggestions.style.display='none';return;}
+    debounceTimer=setTimeout(async()=>{
+      try{
+        const res=await fetch(`/api/places?input=${encodeURIComponent(val)}`);
+        const data=await res.json();
+        if(data.predictions&&data.predictions.length>0){
+          suggestions.innerHTML=data.predictions.map(p=>
+            `<div class="suggestion-item" onmousedown="selectAddress('${p.description.replace(/'/g,"\\'")}')">${p.description}</div>`
+          ).join('');
+          suggestions.style.display='block';
+        } else {
+          suggestions.style.display='none';
+        }
+      }catch(e){suggestions.style.display='none';}
+    },300);
+  });
+
+  input.addEventListener('blur',()=>{
+    setTimeout(()=>suggestions.style.display='none',200);
+  });
+}
+
+function selectAddress(address){
+  document.getElementById('addressInput').value=address;
+  document.getElementById('addressSuggestions').style.display='none';
+}
+
+function resetApp(){
+  Object.keys(state).forEach(k=>{if(typeof state[k]==='boolean')state[k]=false;else state[k]=null;});
+  state.notes='';state.booker='';state.firstName='';state.lastName='';
+  state.phone='';state.email='';state.leadSource='';
+  selectedValues={};
+  ['bookerSelect','firstNameInput','lastNameInput','phoneInput','emailInput','addressInput','notesInput'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('otherInput').value='';
+  document.getElementById('otherField').classList.remove('visible');
+  document.getElementById('btn0').disabled=true;
+  document.getElementById('hvChip').style.display='none';
+  document.getElementById('bookerChip').style.display='none';
+  document.getElementById('hvError').style.display='none';
+  document.getElementById('slotsError').style.display='none';
+  document.getElementById('btnBook').disabled=true;
+  document.getElementById('btnBook').textContent='Book Appointment';
+  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.toggle').forEach(t=>t.classList.remove('on'));
+  ['btn2','btn4','btn5','btn6'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
+  showStep(0);updateProgress(0);
+}
+</script>
+</body>
+</html>
