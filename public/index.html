@@ -497,11 +497,16 @@ function rankConsultants(tier){
   if(state.motorization)eligible=eligible.filter(([n,c])=>c.specialty.includes('motorization'));
   if(eligible.length===0)eligible=Object.entries(CONSULTANTS).filter(([n,c])=>c.tiers.includes(tier));
   eligible.sort(([an,ac],[bn,bc])=>{
-    const aH=hood&&ac.neighborhoods.includes(hood)?0:1;
-    const bH=hood&&bc.neighborhoods.includes(hood)?0:1;
-    if(aH!==bH)return aH-bH;
-    return ac.priority-bc.priority;
-  });
+  if(tier==='D'){
+    const aP=['Nancy','Linda','Alaina'].includes(an)?0:1;
+    const bP=['Nancy','Linda','Alaina'].includes(bn)?0:1;
+    if(aP!==bP)return aP-bP;
+  }
+  const aH=hood&&ac.neighborhoods.includes(hood)?0:1;
+  const bH=hood&&bc.neighborhoods.includes(hood)?0:1;
+  if(aH!==bH)return aH-bH;
+  return ac.priority-bc.priority;
+});
   return eligible.slice(0,3);
 }
 
