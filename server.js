@@ -139,11 +139,14 @@ app.get('/api/slots', async (req, res) => {
           const slotEnd = new Date(current);
           slotEnd.setHours(slotEnd.getHours() + 2);
 
-          const conflict = busy.some(b => {
-            const bStart = new Date(b.start);
-            const bEnd = new Date(b.end);
-            return current < bEnd && slotEnd > bStart;
-          });
+        const conflict = busy.some(b => {
+  const bStart = new Date(b.start);
+  const bEnd = new Date(b.end);
+  // Add 1 hour buffer before and after each busy block
+  bStart.setHours(bStart.getHours() - 1);
+  bEnd.setHours(bEnd.getHours() + 1);
+  return current < bEnd && slotEnd > bStart;
+});
 
           if (!conflict) {
             slots.push(current.toISOString());
