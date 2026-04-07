@@ -93,7 +93,7 @@ app.get('/api/slots', async (req, res) => {
   const auth = getAuthedClient(req);
   if (!auth) return res.status(401).json({ error: 'Not authenticated' });
 
-  const { consultants, date_range = 7 } = req.query;
+  const { consultants, date_range = 14 } = req.query;
   if (!consultants) return res.json({});
 
   const names = consultants.split(',').map(n => n.trim());
@@ -123,13 +123,19 @@ app.get('/api/slots', async (req, res) => {
 
       const busy = freebusyRes.data.calendars[calId]?.busy || [];
       const slots = [];
-      const current = new Date(timeMin);
+
+      // Start from next business hour in Chicago time
+      const current = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+      current.setMinutes(0, 0, 0);
+      current.setHours(current.getHours() + 1);
 
       while (current < timeMax && slots.length < 6) {
-        const day = current.getDay();
-        const hour = current.getHours();
+        // Get current hour in Chicago time
+        const chicagoTime = new Date(current.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+        const day = chicagoTime.getDay();
+        const hour = chicagoTime.getHours();
 
-        if (day >= 1 && day <= 5 && hour >= 9 && hour < 16) {
+        if (day >= 1 && day <= 5 && hour >= 9 && hour <= 15) {
           const slotEnd = new Date(current);
           slotEnd.setHours(slotEnd.getHours() + 2);
 
@@ -145,9 +151,12 @@ app.get('/api/slots', async (req, res) => {
         }
 
         current.setHours(current.getHours() + 1);
-        if (current.getHours() >= 17) {
+
+        const nextChicago = new Date(current.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+        if (nextChicago.getHours() >= 17) {
           current.setDate(current.getDate() + 1);
-          current.setHours(9, 0, 0, 0);
+          const tomorrow = new Date(current.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+          current.setHours(current.getHours() + (9 - tomorrow.getHours()), 0, 0, 0);
         }
       }
 
