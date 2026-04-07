@@ -5,14 +5,18 @@ const { google } = require('googleapis');
 const fetch = require('node-fetch');
 const path = require('path');
 
-const app = express();
+const app = express();app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { 
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 
+  }
 }));
 
 const CONSULTANT_CALENDARS = {
