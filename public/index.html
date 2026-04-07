@@ -89,7 +89,8 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
 .slots-row{display:flex;gap:8px;flex-wrap:wrap;}
 .slot-btn{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;color:#1a1a1a;cursor:pointer;transition:all .15s;}
 .slot-btn:hover{border-color:#394E9D;color:#394E9D;background:#F0F3FC;}
-.slot-btn.selected-slot{border-color:#394E9D !important;background:#394E9D !important;color:#fff !important;}.slot-btn.slot-warn{border-color:#854F0B;color:#854F0B;}
+.slot-btn.selected-slot{border-color:#394E9D !important;background:#394E9D !important;color:#fff !important;}
+.slot-btn.slot-warn{border-color:#854F0B;color:#854F0B;}
 .slot-btn.slot-warn:hover{background:#FAEEDA;border-color:#854F0B;}
 .no-slots{font-size:13px;color:#999;font-style:italic;}
 .confirm-icon{width:52px;height:52px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
@@ -119,6 +120,10 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
 .btn-auth{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:#fff;background:#394E9D;border:none;border-radius:8px;padding:13px 28px;cursor:pointer;text-decoration:none;display:inline-block;}
 .btn-auth:hover{background:#2D3E85;}
 .error-msg{background:#fff0f0;border:1px solid #ffcccc;border-radius:8px;padding:12px 16px;font-size:13px;color:#cc0000;margin-bottom:16px;display:none;}
+.address-suggestions{border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;background:#fff;display:none;max-height:200px;overflow-y:auto;margin-bottom:4px;}
+.suggestion-item{padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f0f0f0;color:#1a1a1a;}
+.suggestion-item:hover{background:#f5f5f5;}
+.suggestion-item:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -142,7 +147,7 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
     <div class="step" id="step-0">
       <div class="step-label">Before we start</div>
       <div class="step-question">Who's taking this call?</div>
-      <div class="step-hint">This gets attached to the appointment so the consultant knows who to follow up with if they have questions.</div>
+      <div class="step-hint">This gets attached to the appointment so the consultant knows who to follow up with.</div>
       <div class="field-label">Your name</div>
       <select class="select-input" id="bookerSelect" onchange="handleBookerSelect()">
         <option value="">Select your name...</option>
@@ -179,7 +184,7 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <input class="text-input" type="email" id="emailInput" placeholder="email@example.com" style="margin-bottom:0;" />
       <div class="nav-row" style="margin-top:20px;">
         <button class="btn-back" onclick="goBack(1)">← Back</button>
-        <button class="btn-next" id="btn1" onclick="goNext(1)">Continue</button>
+        <button class="btn-next" onclick="goNext(1)">Continue</button>
       </div>
     </div>
 
@@ -188,42 +193,15 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="step-question">How did they hear about us?</div>
       <div class="step-hint">This helps us understand which channels are driving appointments.</div>
       <div class="options-grid one-col">
-        <button class="option-btn" onclick="select(2,'Website',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Website</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Google Search',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Google Search</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Referral (Friend)',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Referral (Friend)</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Referral (Realtor, Builder, Designer)',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Referral (Realtor, Builder, Designer)</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Hunter Douglas Website',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Hunter Douglas Website</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Showroom Walk-In',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Showroom Walk-In</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Social Media',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Social Media</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Returning Customer',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Returning Customer</span>
-        </button>
-        <button class="option-btn" onclick="select(2,'Other',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Other</span>
-        </button>
+        <button class="option-btn" onclick="select(2,'Website',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Website</span></button>
+        <button class="option-btn" onclick="select(2,'Google Search',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Google Search</span></button>
+        <button class="option-btn" onclick="select(2,'Referral (Friend)',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Referral (Friend)</span></button>
+        <button class="option-btn" onclick="select(2,'Referral (Realtor, Builder, Designer)',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Referral (Realtor, Builder, Designer)</span></button>
+        <button class="option-btn" onclick="select(2,'Hunter Douglas Website',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Hunter Douglas Website</span></button>
+        <button class="option-btn" onclick="select(2,'Showroom Walk-In',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Showroom Walk-In</span></button>
+        <button class="option-btn" onclick="select(2,'Social Media',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Social Media</span></button>
+        <button class="option-btn" onclick="select(2,'Returning Customer',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Returning Customer</span></button>
+        <button class="option-btn" onclick="select(2,'Other',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Other</span></button>
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(2)">← Back</button>
@@ -236,9 +214,9 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="step-question">What's the address of the home?</div>
       <div class="step-hint">We'll use this to look up the estimated home value and check neighborhood history.</div>
       <div class="field-label">Address</div>
-     <input class="text-input" type="text" id="addressInput" placeholder="Start typing an address..." autocomplete="off" style="margin-bottom:4px;" />
-<div id="addressSuggestions" style="border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;background:#fff;display:none;max-height:200px;overflow-y:auto;margin-bottom:4px;"></div>
-<div class="address-note">Select an address from the suggestions.</div>
+      <input class="text-input" type="text" id="addressInput" placeholder="Start typing an address..." autocomplete="off" style="margin-bottom:0;" />
+      <div class="address-suggestions" id="addressSuggestions"></div>
+      <div class="address-note">Select an address from the suggestions.</div>
       <div id="hvChip" style="display:none" class="hv-chip"><div class="hv-dot"></div><span id="hvText"></span></div>
       <div class="error-msg" id="hvError">Could not look up home value — you can continue without it.</div>
       <div class="nav-row">
@@ -252,14 +230,8 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="step-question">Residential or commercial?</div>
       <div class="step-hint">Commercial projects route to our dedicated commercial specialist.</div>
       <div class="options-grid two-col">
-        <button class="option-btn" onclick="select(4,'residential',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Residential</span><span class="option-sub">Home or condo</span>
-        </button>
-        <button class="option-btn" onclick="select(4,'commercial',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Commercial</span><span class="option-sub">Office, retail, hospitality</span>
-        </button>
+        <button class="option-btn" onclick="select(4,'residential',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Residential</span><span class="option-sub">Home or condo</span></button>
+        <button class="option-btn" onclick="select(4,'commercial',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Commercial</span><span class="option-sub">Office, retail, hospitality</span></button>
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(4)">← Back</button>
@@ -272,18 +244,9 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="step-question">How much of the home are we covering?</div>
       <div class="step-hint">A rough sense is fine — exact room counts don't matter here.</div>
       <div class="options-grid one-col">
-        <button class="option-btn" onclick="select(5,'whole-home',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Whole home or most rooms</span><span class="option-sub">5+ windows, multiple rooms</span>
-        </button>
-        <button class="option-btn" onclick="select(5,'few-rooms',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">A few rooms</span><span class="option-sub">2–4 rooms</span>
-        </button>
-        <button class="option-btn" onclick="select(5,'one-room',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">One room or a few windows</span><span class="option-sub">1–2 windows or a single space</span>
-        </button>
+        <button class="option-btn" onclick="select(5,'whole-home',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Whole home or most rooms</span><span class="option-sub">5+ windows, multiple rooms</span></button>
+        <button class="option-btn" onclick="select(5,'few-rooms',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">A few rooms</span><span class="option-sub">2–4 rooms</span></button>
+        <button class="option-btn" onclick="select(5,'one-room',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">One room or a few windows</span><span class="option-sub">1–2 windows or a single space</span></button>
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(5)">← Back</button>
@@ -296,22 +259,10 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="step-question">What's driving the project?</div>
       <div class="step-hint">This helps us understand urgency and design intent.</div>
       <div class="options-grid one-col">
-        <button class="option-btn" onclick="select(6,'new-build',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">New build or new construction</span>
-        </button>
-        <button class="option-btn" onclick="select(6,'remodel',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Full remodel or renovation</span>
-        </button>
-        <button class="option-btn" onclick="select(6,'refresh',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Refresh — updating what's there</span>
-        </button>
-        <button class="option-btn" onclick="select(6,'browsing',this)">
-          <svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg>
-          <span class="option-label">Just exploring options</span>
-        </button>
+        <button class="option-btn" onclick="select(6,'new-build',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">New build or new construction</span></button>
+        <button class="option-btn" onclick="select(6,'remodel',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Full remodel or renovation</span></button>
+        <button class="option-btn" onclick="select(6,'refresh',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Refresh — updating what's there</span></button>
+        <button class="option-btn" onclick="select(6,'browsing',this)"><svg class="check-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"/><polyline points="6 10 9 13 14 7"/></svg><span class="option-label">Just exploring options</span></button>
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(6)">← Back</button>
@@ -358,10 +309,9 @@ body{background:#f0f2f5;display:flex;align-items:flex-start;justify-content:cent
       <div class="error-msg" id="slotsError">Could not load calendar availability. Please try again.</div>
       <div id="consultantCards"></div>
       <div class="nav-row" style="margin-top:20px;">
-  <button class="btn-back" onclick="resetApp()">← Start over</button>
-  <button class="btn-back" style="color:#394E9D;" onclick="goBack('results')">Edit answers</button>
-  <button class="btn-next" id="btnBook" disabled onclick="bookAppointment()">Book Appointment</button>
-</div>
+        <button class="btn-back" onclick="resetApp()">← Start over</button>
+        <button class="btn-back" style="color:#394E9D;" onclick="goBack('results')">Edit answers</button>
+        <button class="btn-next" id="btnBook" disabled onclick="bookAppointment()">Book Appointment</button>
       </div>
     </div>
 
@@ -405,13 +355,11 @@ let selectedValues={};
 async function checkAuth(){
   try{
     const res=await fetch('/api/auth-check');
-    console.log('Auth check status:', res.status);
-    const data=await res.json();
-    console.log('Auth check data:', data);
+    console.log('Auth check status:',res.status);
     if(res.status===401)return false;
     return true;
   }catch(e){
-    console.log('Auth check error:', e);
+    console.log('Auth check error:',e);
     return false;
   }
 }
@@ -419,21 +367,20 @@ async function checkAuth(){
 window.addEventListener('DOMContentLoaded',async()=>{
   initAddressAutocomplete();
   const params=new URLSearchParams(window.location.search);
-  console.log('URL params:', params.toString());
-  console.log('authed param:', params.get('authed'));
+  console.log('URL params:',params.toString());
   if(params.get('authed')==='1'){
     history.replaceState({},'','/');
     showStep(0);updateProgress(0);
   } else {
     const ok=await checkAuth();
-    console.log('checkAuth result:', ok);
+    console.log('checkAuth result:',ok);
     if(ok){showStep(0);updateProgress(0);}
     else{showStep('auth');}
   }
 });
-});
 
 function updateProgress(p){document.getElementById('progressFill').style.width=p+'%';}
+
 function showStep(id){
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById('step-'+id);
@@ -512,16 +459,16 @@ function rankConsultants(tier){
   if(state.motorization)eligible=eligible.filter(([n,c])=>c.specialty.includes('motorization'));
   if(eligible.length===0)eligible=Object.entries(CONSULTANTS).filter(([n,c])=>c.tiers.includes(tier));
   eligible.sort(([an,ac],[bn,bc])=>{
-  if(tier==='D'){
-    const aP=['Nancy','Linda','Alaina'].includes(an)?0:1;
-    const bP=['Nancy','Linda','Alaina'].includes(bn)?0:1;
-    if(aP!==bP)return aP-bP;
-  }
-  const aH=hood&&ac.neighborhoods.includes(hood)?0:1;
-  const bH=hood&&bc.neighborhoods.includes(hood)?0:1;
-  if(aH!==bH)return aH-bH;
-  return ac.priority-bc.priority;
-});
+    if(tier==='D'){
+      const aP=['Nancy','Linda','Alaina'].includes(an)?0:1;
+      const bP=['Nancy','Linda','Alaina'].includes(bn)?0:1;
+      if(aP!==bP)return aP-bP;
+    }
+    const aH=hood&&ac.neighborhoods.includes(hood)?0:1;
+    const bH=hood&&bc.neighborhoods.includes(hood)?0:1;
+    if(aH!==bH)return aH-bH;
+    return ac.priority-bc.priority;
+  });
   return eligible.slice(0,3);
 }
 
@@ -580,7 +527,6 @@ async function goNext(step){
 }
 
 function goBack(step){
- function goBack(step){
   const map={1:0,2:1,3:2,4:3,5:4,6:5,7:6};
   const prog={0:0,1:8,2:16,3:24,4:32,5:48,6:62};
   if(step==='results'){showStep(7);updateProgress(76);return;}
@@ -592,13 +538,12 @@ function showCommercial(){
   showStep('results');updateProgress(90);
   document.getElementById('tierPill').innerHTML='<div class="tier-pill tier-A">Commercial Route</div>';
   document.getElementById('resultsMeta').textContent='Routing to commercial specialist.';
-  renderConsultantCards([['Amber Roehrs',CONSULTANTS['Amber Roehrs']]],[],true);
+  renderConsultantCards([['Amber Roehrs',CONSULTANTS['Amber Roehrs']]],{},true);
 }
 
 async function runMatching(){
   state.notes=document.getElementById('notesInput').value;
   showStep('matching');updateProgress(85);
-
   const labels=[
     ['Looking up home value...','Connecting to real estate data'],
     ['Running matching algorithm...','Applying tier and specialty filters'],
@@ -618,20 +563,20 @@ async function runMatching(){
   const ranked=rankConsultants(tier);
   const names=ranked.map(([n])=>n).join(',');
 
-  let slots={};
+  let slotsData={};
   try{
     const res=await fetch(`/api/slots?consultants=${encodeURIComponent(names)}&date_range=14&address=${encodeURIComponent(state.address)}`);
     if(res.status===401){clearInterval(iv);showStep('auth');return;}
-    slots=await res.json();
+    slotsData=await res.json();
   }catch(e){
     document.getElementById('slotsError').style.display='block';
   }
 
   clearInterval(iv);
-  renderResults(tier,ranked,slots);
+  renderResults(tier,ranked,slotsData);
 }
 
-function renderResults(tier,ranked,slots){
+function renderResults(tier,ranked,slotsData){
   const tierColors={A:'tier-A',B:'tier-B',C:'tier-C',D:'tier-D'};
   const tierLabels={A:'Tier A — High-value project',B:'Tier B — Mid-size project',C:'Tier C — Focused project',D:'Tier D — Targeted scope'};
   document.getElementById('tierPill').innerHTML=`<div class="tier-pill ${tierColors[tier]}">${tierLabels[tier]}</div>`;
@@ -641,26 +586,26 @@ function renderResults(tier,ranked,slots){
     state.homeValue?state.homeValue+' est.':'',
     hood?hood.charAt(0).toUpperCase()+hood.slice(1):''
   ].filter(Boolean).join(' · ');
-  renderConsultantCards(ranked,slots,true);
+  renderConsultantCards(ranked,slotsData,true);
   showStep('results');updateProgress(90);
 }
 
-function renderConsultantCards(ranked,slots,showBest){
+function renderConsultantCards(ranked,slotsData,showBest){
   const cards=ranked.map(([name,c],i)=>{
-  const slotData=slots[name]||{slots:[],zoneWarnings:{}};
-const consultantSlots=slotData.slots||[];
+    const slotData=slotsData[name]||{slots:[],zoneWarnings:{}};
+    const consultantSlots=slotData.slots||[];
+    const warnings=slotData.zoneWarnings||{};
     const tagHtml=c.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join('');
     const ini=INITIALS[name]||name.slice(0,2).toUpperCase();
-  const warnings=slots.zoneWarnings||{};
-const slotHtml=consultantSlots.length>0
-  ?consultantSlots.slice(0,6).map(s=>{
-    const warn=warnings[s];
-    return`<div style="display:inline-block;margin:0 4px 4px 0;">
-      <button class="slot-btn${warn?' slot-warn':''}" onclick="selectSlot('${name}','${s}',this)">${formatSlot(s)}</button>
-      ${warn?`<div style="font-size:10px;color:#854F0B;max-width:140px;line-height:1.3;margin-top:2px;">⚠ ${warn}</div>`:''}
-    </div>`;
-  }).join('')
-  :`<span class="no-slots">No availability in next 14 days</span>`;
+    const slotHtml=consultantSlots.length>0
+      ?consultantSlots.slice(0,6).map(s=>{
+        const warn=warnings[s];
+        return`<div style="display:inline-block;margin:0 4px 8px 0;">
+          <button class="slot-btn${warn?' slot-warn':''}" onclick="selectSlot('${name}','${s}',this)">${formatSlot(s)}</button>
+          ${warn?`<div style="font-size:10px;color:#854F0B;max-width:150px;line-height:1.3;margin-top:2px;">⚠ Different area</div>`:''}
+        </div>`;
+      }).join('')
+      :`<span class="no-slots">No availability in next 14 days</span>`;
     return`<div class="consultant-card ${i===0&&showBest?'top':''}">
       <div class="consultant-top-row">
         <div class="consultant-identity">
@@ -780,84 +725,4 @@ function showConfirmation(){
 
   document.getElementById('panel-customer').innerHTML=`
     <div class="invite-row"><span class="invite-key">Event title</span><span class="invite-val">Little Blind Spot Design Consultation</span></div>
-    <div class="invite-row"><span class="invite-key">Date & time</span><span class="invite-val">${formatSlot(state.selectedSlot)}, 2 hours</span></div>
-    <div class="invite-row"><span class="invite-key">Location</span><span class="invite-val">${state.address}</span></div>
-    <div class="invite-row"><span class="invite-key">Your consultant</span><span class="invite-val">${state.selectedConsultant}</span></div>
-    <div class="invite-row"><span class="invite-key">Questions?</span><span class="invite-val">(612) 555-0100</span></div>
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0;">
-      <div style="font-size:11px;font-weight:500;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">What to expect</div>
-      ${expectHtml}
-    </div>
-  `;
-
-  showStep('confirm');updateProgress(100);
-}
-
-function switchTab(tab){
-  document.querySelectorAll('.invite-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.invite-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelector(`.invite-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.getElementById('panel-'+tab).classList.add('active');
-}
-function initAddressAutocomplete(){
-  const input=document.getElementById('addressInput');
-  const suggestions=document.getElementById('addressSuggestions');
-  let debounceTimer;
-
-  input.addEventListener('input',()=>{
-    clearTimeout(debounceTimer);
-    const val=input.value.trim();
-    if(val.length<3){suggestions.style.display='none';return;}
-    debounceTimer=setTimeout(async()=>{
-      try{
-        const res=await fetch(`/api/places?input=${encodeURIComponent(val)}`);
-        const data=await res.json();
-        if(data.predictions&&data.predictions.length>0){
-          suggestions.innerHTML=data.predictions.map(p=>
-            `<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f0f0f0;color:#1a1a1a;" 
-             onmousedown="selectAddress('${p.description.replace(/'/g,"\\'")}')"
-             onmouseover="this.style.background='#f5f5f5'"
-             onmouseout="this.style.background='#fff'">${p.description}</div>`
-          ).join('');
-          suggestions.style.display='block';
-        } else {
-          suggestions.style.display='none';
-        }
-      }catch(e){suggestions.style.display='none';}
-    },300);
-  });
-
-  input.addEventListener('blur',()=>{
-    setTimeout(()=>suggestions.style.display='none',200);
-  });
-}
-
-function selectAddress(address){
-  document.getElementById('addressInput').value=address;
-  document.getElementById('addressSuggestions').style.display='none';
-}
-function resetApp(){
-  Object.keys(state).forEach(k=>{if(typeof state[k]==='boolean')state[k]=false;else state[k]=null;});
-  state.notes='';state.booker='';state.firstName='';state.lastName='';
-  state.phone='';state.email='';state.leadSource='';
-  selectedValues={};
-  ['bookerSelect','firstNameInput','lastNameInput','phoneInput','emailInput','addressInput','notesInput'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
-  });
-  document.getElementById('otherInput').value='';
-  document.getElementById('otherField').classList.remove('visible');
-  document.getElementById('btn0').disabled=true;
-  document.getElementById('hvChip').style.display='none';
-  document.getElementById('bookerChip').style.display='none';
-  document.getElementById('hvError').style.display='none';
-  document.getElementById('slotsError').style.display='none';
-  document.getElementById('btnBook').disabled=true;
-  document.getElementById('btnBook').textContent='Book Appointment';
-  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
-  document.querySelectorAll('.toggle').forEach(t=>t.classList.remove('on'));
-  ['btn2','btn4','btn5','btn6'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
-  showStep(0);updateProgress(0);
-}
-</script>
-</body>
-</html>
+    <div class="invite-row"><span class="invite-key">Date & time</span><span class="invite-val">${forma
