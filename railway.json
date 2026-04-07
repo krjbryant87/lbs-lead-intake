@@ -1,7 +1,7 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install"
+    "buildCommand": "npm install --no-package-lock"
   },
   "deploy": {
     "startCommand": "node server.js"
