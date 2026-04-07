@@ -404,7 +404,7 @@ let selectedValues={};
 
 async function checkAuth(){
   try{
-    const res=await fetch('/api/slots?consultants=Lisa&date_range=1');
+    const res=await fetch('/api/auth-check');
     if(res.status===401)return false;
     return true;
   }catch(e){return false;}
