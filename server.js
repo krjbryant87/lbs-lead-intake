@@ -1,6 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+
+app.set('trust proxy', 1);
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret',
+  resave: true,
+  saveUninitialized: true,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
 const { google } = require('googleapis');
 const fetch = require('node-fetch');
 const path = require('path');
